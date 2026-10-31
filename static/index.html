@@ -1,0 +1,1431 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f6f7fb">
+    <meta name="description" content="Knowora - Your Knowledge. Your AI. Your Answers.">
+    <title>Knowora — AI Knowledge Assistant</title>
+
+    <script>
+        // Apply saved theme before rendering to avoid a theme flash.
+        (() => {
+            const savedTheme = localStorage.getItem("knowora-theme");
+            document.documentElement.dataset.theme =
+                savedTheme === "dark" ? "dark" : "light";
+        })();
+    </script>
+
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #f5f6fb;
+            --surface: #ffffff;
+            --surface-soft: #f8f9fd;
+            --surface-hover: #f0f1f8;
+            --text: #20243a;
+            --text-secondary: #747b91;
+            --border: #e8eaf2;
+            --primary: #6958e8;
+            --primary-hover: #5846d2;
+            --primary-soft: #efedff;
+            --user-bubble: #6958e8;
+            --user-text: #ffffff;
+            --bot-bubble: #f3f4fa;
+            --bot-text: #252940;
+            --danger-bg: #fff0f0;
+            --danger-text: #d44747;
+            --shadow: 0 12px 45px rgba(33, 37, 70, 0.08);
+            --header-gradient: linear-gradient(120deg, #5143c9, #7965ee);
+        }
+
+        :root[data-theme="dark"] {
+            color-scheme: dark;
+            --bg: #10121c;
+            --surface: #191c29;
+            --surface-soft: #202333;
+            --surface-hover: #292d40;
+            --text: #f0f1fa;
+            --text-secondary: #a0a5bb;
+            --border: #303449;
+            --primary: #9484ff;
+            --primary-hover: #a89aff;
+            --primary-soft: #302b50;
+            --user-bubble: #6958d9;
+            --user-text: #ffffff;
+            --bot-bubble: #252a3b;
+            --bot-text: #edf0fa;
+            --danger-bg: #42272d;
+            --danger-text: #ff9d9d;
+            --shadow: 0 12px 45px rgba(0, 0, 0, 0.25);
+            --header-gradient: linear-gradient(120deg, #27234f, #423576);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            padding: 20px;
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+            background:
+                radial-gradient(ellipse at 10% 0%, rgba(111, 93, 238, 0.09), transparent 35%),
+                var(--bg);
+            color: var(--text);
+            transition: background 0.25s, color 0.25s;
+        }
+
+        button, select, textarea {
+            font: inherit;
+        }
+
+        button:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible,
+        label:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 3px;
+        }
+
+        .app {
+            max-width: 1100px;
+            height: calc(100vh - 40px);
+            min-height: 550px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: background 0.25s, border-color 0.25s;
+        }
+
+        /* HEADER */
+
+        .header {
+            background: var(--header-gradient);
+            color: white;
+            padding: 19px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 43px;
+            height: 43px;
+            display: grid;
+            place-items: center;
+            border-radius: 13px;
+            background: rgba(255, 255, 255, 0.17);
+            border: 1px solid rgba(255, 255, 255, 0.23);
+            font-size: 23px;
+            font-weight: 700;
+        }
+
+        .brand h1 {
+            font-size: 23px;
+            letter-spacing: -0.7px;
+            font-weight: 750;
+        }
+
+        .brand p {
+            margin-top: 4px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            flex-wrap: wrap;
+        }
+
+        .provider-select {
+            min-width: 135px;
+            padding: 10px 12px;
+            border-radius: 9px;
+            border: 1px solid rgba(255,255,255,0.35);
+            background: rgba(255,255,255,0.14);
+            color: white;
+            outline: none;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .provider-select option {
+            background: white;
+            color: #20243a;
+        }
+
+        .header-btn {
+            padding: 10px 12px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 9px;
+            color: white;
+            background: rgba(255,255,255,0.14);
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .header-btn:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-1px);
+        }
+
+        /* KNOWLEDGE BASE */
+
+        .knowledge-base {
+            padding: 15px 23px;
+            background: var(--surface-soft);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .knowledge-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .knowledge-heading h3 {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .knowledge-heading span {
+            color: var(--text-secondary);
+            font-size: 11px;
+        }
+
+        .upload-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .upload-label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            background: var(--primary-soft);
+            color: var(--primary);
+            padding: 9px 14px;
+            border-radius: 9px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 650;
+            transition: background 0.2s;
+        }
+
+        .upload-label:hover {
+            background: var(--surface-hover);
+        }
+
+        #pdfUpload {
+            display: none;
+        }
+
+        #uploadStatus {
+            color: var(--text-secondary);
+            font-size: 12px;
+            overflow-wrap: anywhere;
+        }
+
+        #documentList {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .document-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .document-info {
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .document-info strong {
+            font-weight: 600;
+        }
+
+        .document-info small {
+            display: block;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .delete-document-btn {
+            background: var(--danger-bg);
+            color: var(--danger-text);
+            border: none;
+            padding: 7px 10px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+
+        .delete-document-btn:hover {
+            filter: brightness(0.96);
+        }
+
+        .delete-document-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* CHAT AREA */
+
+        .chat-messages {
+            flex: 1;
+            min-height: 0;
+            padding: 25px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            scroll-behavior: smooth;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+
+        .welcome-message {
+            margin: auto;
+            max-width: 440px;
+            text-align: center;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            padding: 25px;
+        }
+
+        .welcome-icon {
+            width: 65px;
+            height: 65px;
+            margin: 0 auto 18px;
+            display: grid;
+            place-items: center;
+            border-radius: 20px;
+            background: var(--primary-soft);
+            color: var(--primary);
+            font-size: 29px;
+        }
+
+        .welcome-message h2 {
+            color: var(--text);
+            font-size: 23px;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .welcome-message p {
+            font-size: 13px;
+        }
+
+        .message {
+            max-width: 78%;
+            padding: 13px 16px;
+            border-radius: 15px;
+            line-height: 1.7;
+            font-size: 14px;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+            animation: messageIn 0.2s ease;
+        }
+
+        @keyframes messageIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: var(--user-bubble);
+            color: var(--user-text);
+            border-bottom-right-radius: 4px;
+        }
+
+        .bot-message {
+            align-self: flex-start;
+            background: var(--bot-bubble);
+            color: var(--bot-text);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-sources {
+            align-self: flex-start;
+            max-width: 78%;
+            font-size: 11px;
+            color: var(--text-secondary);
+            background: var(--surface-soft);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 13px;
+            margin-top: -7px;
+        }
+
+        .message-sources strong {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+
+        .message-sources div {
+            margin-top: 4px;
+            overflow-wrap: anywhere;
+        }
+
+        .typing {
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            padding: 10px 12px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--primary);
+            animation: bounce 1s infinite alternate;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            to {
+                transform: translateY(-5px);
+                opacity: 0.45;
+            }
+        }
+
+        /* INPUT AREA */
+
+        .chat-input-area {
+            padding: 16px 22px 11px;
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .chat-form {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            padding: 7px;
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            background: var(--surface-soft);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .chat-form:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(105,88,232,0.09);
+        }
+
+        #messageInput {
+            flex: 1;
+            min-width: 0;
+            resize: none;
+            border: none;
+            background: transparent;
+            color: var(--text);
+            padding: 9px 10px;
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            min-height: 40px;
+            max-height: 130px;
+        }
+
+        #messageInput::placeholder {
+            color: var(--text-secondary);
+        }
+
+        #sendBtn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 9px;
+            padding: 11px 18px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 650;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        #sendBtn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        #sendBtn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .input-hint {
+            color: var(--text-secondary);
+            font-size: 10px;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        /* COPYRIGHT / BRAND FOOTER */
+
+        .brand-footer {
+            text-align: center;
+            padding: 0 10px 12px;
+            color: var(--text-secondary);
+            font-size: 9px;
+            letter-spacing: 0.5px;
+            opacity: 0.7;
+            background: var(--surface);
+        }
+
+        .brand-footer span {
+            color: var(--primary);
+            font-weight: 650;
+        }
+
+        /* MOBILE */
+
+        @media (max-width: 650px) {
+            body {
+                padding: 0;
+            }
+
+            .app {
+                height: 100dvh;
+                min-height: 0;
+                border-radius: 0;
+                border: none;
+            }
+
+            .header {
+                padding: 14px;
+                gap: 12px;
+            }
+
+            .brand-icon {
+                width: 38px;
+                height: 38px;
+                font-size: 20px;
+            }
+
+            .brand h1 {
+                font-size: 20px;
+            }
+
+            .brand p {
+                font-size: 10px;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .provider-select {
+                flex: 1;
+            }
+
+            .knowledge-base {
+                padding: 13px 15px;
+            }
+
+            .chat-messages {
+                padding: 16px 13px;
+            }
+
+            .message,
+            .message-sources {
+                max-width: 92%;
+                font-size: 13px;
+            }
+
+            .welcome-message h2 {
+                font-size: 20px;
+            }
+
+            .chat-input-area {
+                padding: 12px 12px 8px;
+            }
+
+            #sendBtn {
+                padding: 11px 14px;
+            }
+
+            .brand-footer {
+                padding-bottom: 9px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- HEADER -->
+        <header class="header">
+
+            <div class="brand">
+                <div class="brand-icon">K</div>
+
+                <div>
+                    <h1>Knowora</h1>
+                    <p>Your Knowledge. Your AI. Your Answers.</p>
+                </div>
+            </div>
+
+            <div class="header-actions">
+
+                <select id="providerSelect" class="provider-select"
+                    aria-label="Select AI provider">
+                    <option value="gemini">Gemini</option>
+                    <option value="ollama">Ollama (Local)</option>
+                </select>
+
+                <button class="header-btn" id="themeToggle"
+                    type="button" aria-label="Switch color theme"
+                    title="Switch theme">
+                    <span id="themeIcon">☾</span>
+                    <span id="themeLabel">Dark</span>
+                </button>
+
+                <button class="header-btn" id="clearChatBtn" type="button">
+                    Clear Chat
+                </button>
+
+            </div>
+        </header>
+
+
+        <!-- KNOWLEDGE BASE -->
+        <section class="knowledge-base">
+
+            <div class="knowledge-heading">
+                <h3>Knowledge Base</h3>
+                <span>PDF documents</span>
+            </div>
+
+            <div class="upload-area">
+
+                <label for="pdfUpload" class="upload-label">
+                    + Upload PDF
+                </label>
+
+                <input
+                    type="file"
+                    id="pdfUpload"
+                    accept=".pdf,application/pdf"
+                >
+
+                <span id="uploadStatus">
+                    Upload a PDF to expand your AI's knowledge.
+                </span>
+
+            </div>
+
+            <div id="documentList">
+                Loading documents...
+            </div>
+
+        </section>
+
+
+        <!-- CHAT MESSAGES -->
+        <main class="chat-messages" id="chatMessages">
+
+            <div class="welcome-message" id="welcomeMessage">
+
+                <div class="welcome-icon">✦</div>
+
+                <h2>Welcome to Knowora</h2>
+
+                <p>
+                    Your intelligent AI knowledge assistant.
+                    Ask a question, explore an idea, or upload a PDF
+                    to start a conversation.
+                </p>
+
+            </div>
+
+        </main>
+
+
+        <!-- CHAT INPUT -->
+        <footer class="chat-input-area">
+
+            <form class="chat-form" id="chatForm">
+
+                <textarea
+                    id="messageInput"
+                    placeholder="Message Knowora..."
+                    rows="1"
+                    required
+                    aria-label="Your message"
+                ></textarea>
+
+                <button type="submit" id="sendBtn">
+                    Send ↑
+                </button>
+
+            </form>
+
+            <p class="input-hint">
+                Enter to send · Shift + Enter for a new line
+            </p>
+
+        </footer>
+
+        <div class="brand-footer">
+            Made by <span>Abhinav</span>
+        </div>
+
+    </div>
+
+
+    <script>
+
+        // --------------------------------
+        // DOM ELEMENTS
+        // --------------------------------
+
+        const chatMessages = document.getElementById("chatMessages");
+        const chatForm = document.getElementById("chatForm");
+        const messageInput = document.getElementById("messageInput");
+        const sendBtn = document.getElementById("sendBtn");
+        const clearChatBtn = document.getElementById("clearChatBtn");
+        const providerSelect = document.getElementById("providerSelect");
+        const pdfUpload = document.getElementById("pdfUpload");
+        const uploadStatus = document.getElementById("uploadStatus");
+        const welcomeMessage = document.getElementById("welcomeMessage");
+        const documentList = document.getElementById("documentList");
+
+        const themeToggle = document.getElementById("themeToggle");
+        const themeIcon = document.getElementById("themeIcon");
+        const themeLabel = document.getElementById("themeLabel");
+
+
+        // --------------------------------
+        // THEME MANAGEMENT
+        // --------------------------------
+
+        function applyTheme(theme) {
+
+            document.documentElement.dataset.theme = theme;
+
+            localStorage.setItem("knowora-theme", theme);
+
+            const isDark = theme === "dark";
+
+            themeIcon.textContent = isDark ? "☀" : "☾";
+            themeLabel.textContent = isDark ? "Light" : "Dark";
+
+            themeToggle.setAttribute(
+                "aria-label",
+                isDark ? "Switch to light mode" : "Switch to dark mode"
+            );
+
+            themeToggle.title = isDark
+                ? "Switch to light mode"
+                : "Switch to dark mode";
+        }
+
+        // Restore saved theme.
+        const savedTheme = localStorage.getItem("knowora-theme");
+
+        applyTheme(savedTheme === "dark" ? "dark" : "light");
+
+        themeToggle.addEventListener("click", function() {
+
+            const currentTheme =
+                document.documentElement.dataset.theme;
+
+            applyTheme(
+                currentTheme === "dark" ? "light" : "dark"
+            );
+
+        });
+
+
+        // --------------------------------
+        // CHAT HISTORY
+        // --------------------------------
+
+        let chatHistory = [];
+
+        try {
+
+            const savedHistory = localStorage.getItem("chatHistory");
+
+            chatHistory = savedHistory
+                ? JSON.parse(savedHistory)
+                : [];
+
+            if (!Array.isArray(chatHistory)) {
+                chatHistory = [];
+            }
+
+        } catch (error) {
+
+            console.error("Could not load chat history:", error);
+
+            chatHistory = [];
+
+        }
+
+
+        function saveChatHistory() {
+
+            try {
+
+                localStorage.setItem(
+                    "chatHistory",
+                    JSON.stringify(chatHistory)
+                );
+
+            } catch (error) {
+
+                console.error("Could not save chat history:", error);
+
+            }
+
+        }
+
+
+        // --------------------------------
+        // LOAD DOCUMENTS
+        // --------------------------------
+
+        async function loadDocuments() {
+
+            documentList.textContent = "Loading documents...";
+
+            try {
+
+                const response = await fetch("/documents");
+
+                const data = await response.json();
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.detail || "Could not load documents."
+                    );
+
+                }
+
+                documentList.innerHTML = "";
+
+                if (
+                    !Array.isArray(data.documents) ||
+                    data.documents.length === 0
+                ) {
+
+                    documentList.textContent =
+                        "No PDFs uploaded yet.";
+
+                    return;
+
+                }
+
+                data.documents.forEach(doc => {
+
+                    const item = document.createElement("div");
+
+                    item.className = "document-item";
+
+                    const info = document.createElement("div");
+
+                    info.className = "document-info";
+
+                    const filename = document.createElement("strong");
+
+                    filename.textContent = doc.filename;
+
+                    const details = document.createElement("small");
+
+                    details.textContent =
+                        `${doc.pages} page(s) · ${doc.chunks} chunk(s)`;
+
+                    info.appendChild(filename);
+
+                    info.appendChild(details);
+
+
+                    const deleteBtn = document.createElement("button");
+
+                    deleteBtn.className = "delete-document-btn";
+
+                    deleteBtn.textContent = "Delete";
+
+                    deleteBtn.addEventListener("click", async function() {
+
+                        const confirmed = confirm(
+                            `Are you sure you want to delete "${doc.filename}" from the knowledge base?`
+                        );
+
+                        if (!confirmed) {
+                            return;
+                        }
+
+                        deleteBtn.disabled = true;
+
+                        deleteBtn.textContent = "Deleting...";
+
+                        try {
+
+                            const deleteResponse = await fetch(
+                                `/documents/${encodeURIComponent(doc.document_id)}`,
+                                { method: "DELETE" }
+                            );
+
+                            const deleteData =
+                                await deleteResponse.json();
+
+                            if (!deleteResponse.ok) {
+
+                                throw new Error(
+                                    deleteData.detail ||
+                                    "Could not delete document."
+                                );
+
+                            }
+
+                            await loadDocuments();
+
+                        } catch (error) {
+
+                            alert("Delete failed: " + error.message);
+
+                            deleteBtn.disabled = false;
+
+                            deleteBtn.textContent = "Delete";
+
+                        }
+
+                    });
+
+
+                    item.appendChild(info);
+
+                    item.appendChild(deleteBtn);
+
+                    documentList.appendChild(item);
+
+                });
+
+            } catch (error) {
+
+                console.error("Document loading error:", error);
+
+                documentList.textContent =
+                    "Could not load documents.";
+
+            }
+
+        }
+
+
+        // --------------------------------
+        // SCROLL TO BOTTOM
+        // --------------------------------
+
+        function scrollToBottom() {
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        }
+
+
+        // --------------------------------
+        // ADD MESSAGE
+        // --------------------------------
+
+        function addMessage(text, sender, save = true) {
+
+            if (welcomeMessage && welcomeMessage.isConnected) {
+                welcomeMessage.remove();
+            }
+
+            const message = document.createElement("div");
+
+            message.classList.add("message");
+
+            if (sender === "user") {
+
+                message.classList.add("user-message");
+
+            } else {
+
+                message.classList.add("bot-message");
+
+            }
+
+            message.textContent = text;
+
+            chatMessages.appendChild(message);
+
+
+            if (save) {
+
+                chatHistory.push({
+                    role: sender,
+                    content: text
+                });
+
+                saveChatHistory();
+
+            }
+
+            scrollToBottom();
+
+            return message;
+
+        }
+
+
+        // --------------------------------
+        // DISPLAY SOURCES
+        // --------------------------------
+
+        function renderSources(sources) {
+
+            if (!Array.isArray(sources) || sources.length === 0) {
+                return;
+            }
+
+            const uniqueSources = [
+                ...new Map(
+                    sources.map(source => [
+                        `${source.filename}-${source.page_number}`,
+                        source
+                    ])
+                ).values()
+            ];
+
+            const container = document.createElement("div");
+
+            container.className = "message-sources";
+
+            const heading = document.createElement("strong");
+
+            heading.textContent = "Sources";
+
+            container.appendChild(heading);
+
+
+            uniqueSources.forEach(source => {
+
+                const item = document.createElement("div");
+
+                item.textContent =
+                    `${source.filename || "Unknown"} · ` +
+                    `Page ${source.page_number || "Unknown"}`;
+
+                container.appendChild(item);
+
+            });
+
+
+            chatMessages.appendChild(container);
+
+            scrollToBottom();
+
+        }
+
+
+        // --------------------------------
+        // RENDER PREVIOUS CONVERSATION
+        // --------------------------------
+
+        function renderSavedChat() {
+
+            if (chatHistory.length === 0) {
+                return;
+            }
+
+            if (welcomeMessage && welcomeMessage.isConnected) {
+                welcomeMessage.remove();
+            }
+
+            chatHistory.forEach(message => {
+
+                const sender =
+                    message.role === "assistant" ? "bot" : message.role;
+
+                const content =
+                    message.content || message.parts?.[0]?.text || "";
+
+                if (content) {
+
+                    addMessage(content, sender, false);
+
+                }
+
+            });
+
+        }
+
+
+        // --------------------------------
+        // TYPING INDICATOR
+        // --------------------------------
+
+        function showTypingIndicator() {
+
+            const typing = document.createElement("div");
+
+            typing.className = "typing";
+
+            typing.id = "typingIndicator";
+
+            typing.innerHTML = `
+                <span>Knowora is thinking</span>
+                <span class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </span>
+            `;
+
+            chatMessages.appendChild(typing);
+
+            scrollToBottom();
+
+        }
+
+
+        function removeTypingIndicator() {
+
+            const typing =
+                document.getElementById("typingIndicator");
+
+            if (typing) {
+                typing.remove();
+            }
+
+        }
+
+
+        // --------------------------------
+        // SEND CHAT MESSAGE
+        // --------------------------------
+
+        chatForm.addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+            const message = messageInput.value.trim();
+
+            if (!message) {
+                return;
+            }
+
+            addMessage(message, "user");
+
+            messageInput.value = "";
+
+            messageInput.style.height = "auto";
+
+            sendBtn.disabled = true;
+
+            sendBtn.textContent = "Sending...";
+
+            showTypingIndicator();
+
+
+            try {
+
+                const response = await fetch("/chat", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        message: message,
+
+                        provider: providerSelect.value,
+
+                        history: chatHistory.slice(0, -1).map(item => ({
+
+                            role:
+                                item.role === "bot"
+                                    ? "model"
+                                    : item.role,
+
+                            content: item.content
+
+                        }))
+
+                    })
+
+                });
+
+
+                const data = await response.json();
+
+                removeTypingIndicator();
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.detail || "Something went wrong."
+                    );
+
+                }
+
+                const reply =
+                    data.reply || "I could not generate a reply.";
+
+                addMessage(reply, "bot");
+
+                renderSources(data.sources);
+
+
+            } catch (error) {
+
+                removeTypingIndicator();
+
+                console.error("Chat error:", error);
+
+                addMessage(
+                    "Error: " + error.message,
+                    "bot"
+                );
+
+            } finally {
+
+                sendBtn.disabled = false;
+
+                sendBtn.textContent = "Send ↑";
+
+                messageInput.focus();
+
+            }
+
+        });
+
+
+        // --------------------------------
+        // PDF UPLOAD
+        // --------------------------------
+
+        pdfUpload.addEventListener("change", async function() {
+
+            const file = pdfUpload.files[0];
+
+            if (!file) {
+                return;
+            }
+
+            if (!file.name.toLowerCase().endsWith(".pdf")) {
+
+                uploadStatus.textContent =
+                    "Please select a PDF file.";
+
+                pdfUpload.value = "";
+
+                return;
+
+            }
+
+            const formData = new FormData();
+
+            formData.append("file", file);
+
+            uploadStatus.textContent = "Uploading PDF...";
+
+
+            try {
+
+                const response = await fetch("/upload-pdf", {
+
+                    method: "POST",
+
+                    body: formData
+
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.detail || "PDF upload failed."
+                    );
+
+                }
+
+                uploadStatus.textContent =
+                    data.message ||
+                    `${file.name} uploaded successfully.`;
+
+                await loadDocuments();
+
+
+            } catch (error) {
+
+                console.error("Upload error:", error);
+
+                uploadStatus.textContent =
+                    "Upload failed: " + error.message;
+
+            } finally {
+
+                pdfUpload.value = "";
+
+            }
+
+        });
+
+
+        // --------------------------------
+        // CLEAR CHAT
+        // --------------------------------
+
+        clearChatBtn.addEventListener("click", function() {
+
+            const confirmClear = confirm(
+                "Are you sure you want to clear your chat history?"
+            );
+
+            if (!confirmClear) {
+                return;
+            }
+
+            chatHistory = [];
+
+            localStorage.removeItem("chatHistory");
+
+            chatMessages.innerHTML = `
+                <div class="welcome-message" id="welcomeMessage">
+                    <div class="welcome-icon">✦</div>
+                    <h2>Welcome to Knowora</h2>
+                    <p>
+                        Your intelligent AI knowledge assistant.
+                        Ask a question, explore an idea, or upload a PDF
+                        to start a conversation.
+                    </p>
+                </div>
+            `;
+
+        });
+
+
+        // --------------------------------
+        // TEXTAREA AUTO RESIZE
+        // --------------------------------
+
+        messageInput.addEventListener("input", function() {
+
+            this.style.height = "auto";
+
+            this.style.height =
+                Math.min(this.scrollHeight, 130) + "px";
+
+        });
+
+
+        // --------------------------------
+        // ENTER KEY TO SEND
+        // --------------------------------
+
+        messageInput.addEventListener("keydown", function(event) {
+
+            if (event.key === "Enter" && !event.shiftKey) {
+
+                event.preventDefault();
+
+                chatForm.requestSubmit();
+
+            }
+
+        });
+
+
+        // --------------------------------
+        // INITIALIZE APP
+        // --------------------------------
+
+        renderSavedChat();
+
+        loadDocuments();
+
+    </script>
+
+</body>
+</html>

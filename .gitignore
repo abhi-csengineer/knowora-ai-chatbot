@@ -1,0 +1,25 @@
+# Environment and secrets
+.env
+.env.*
+
+# Python virtual environments
+.venv/
+.venv312/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Uploaded files and local database
+uploads/
+chroma_db/
+
+# Editor and OS files
+.vscode/
+.DS_Store
+Thumbs.db
+# Local documents and backups
+*.pdf
+chroma_db_backup*/
+old-venv-packages.txt
+static/document_processor.py
