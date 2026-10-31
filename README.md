@@ -211,8 +211,6 @@ The frontend displays the response in the chatbot interface.
 
 ## 6. Project Structure
 
-## 6. Project Structure
-
 ```text
 AI-Chatbot/
 |
