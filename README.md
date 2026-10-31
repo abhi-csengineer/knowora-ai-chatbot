@@ -1,4 +1,4 @@
-# Knowora â€” Your Knowledge. Your AI. Your Answers.
+# Knowora- Your Knowledge. Your AI. Your Answers.
 
 <p align="center">
   <strong>An AI-powered chatbot that combines cloud AI, local LLMs, and Retrieval-Augmented Generation (RAG) to help users interact with their own documents.</strong>
