@@ -508,5 +508,5 @@ This project is currently shared for learning and development purposes. A formal
 ---
 
 <p align="center">
-  <strong>Knowora â€” Your Knowledge. Your AI. Your Answers.</strong>
+  <strong>Knowora-- Your Knowledge. Your AI. Your Answers.</strong>
 </p>
