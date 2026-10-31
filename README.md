@@ -211,38 +211,40 @@ The frontend displays the response in the chatbot interface.
 
 ## 6. Project Structure
 
+## 6. Project Structure
+
 ```text
 AI-Chatbot/
-â”‚
-â”œâ”€â”€ static/
-â”‚   â””â”€â”€ index.html
-â”‚
-â”œâ”€â”€ uploads/
-â”‚   â””â”€â”€ Uploaded PDF files
-â”‚
-â”œâ”€â”€ chroma_db/
-â”‚   â””â”€â”€ Persistent vector database
-â”‚
-â”œâ”€â”€ main.py
-â”‚   â””â”€â”€ FastAPI application and API endpoints
-â”‚
-â”œâ”€â”€ document_processor.py
-â”‚   â””â”€â”€ PDF text extraction and chunking
-â”‚
-â”œâ”€â”€ vector_store.py
-â”‚   â””â”€â”€ ChromaDB storage and retrieval functions
-â”‚
-â”œâ”€â”€ requirements.txt
-â”‚   â””â”€â”€ Python dependencies
-â”‚
-â”œâ”€â”€ .env
-â”‚   â””â”€â”€ Private environment variables
-â”‚
-â”œâ”€â”€ .gitignore
-â”‚   â””â”€â”€ Files excluded from Git
-â”‚
-â””â”€â”€ README.md
-    â””â”€â”€ Project documentation
+|
+|-- static/
+|   |-- index.html
+|
+|-- uploads/
+|   |-- Uploaded PDF files
+|
+|-- chroma_db/
+|   |-- Persistent vector database
+|
+|-- main.py
+|   |-- FastAPI application and API endpoints
+|
+|-- document_processor.py
+|   |-- PDF text extraction and chunking
+|
+|-- vector_store.py
+|   |-- ChromaDB storage and retrieval functions
+|
+|-- requirements.txt
+|   |-- Python dependencies
+|
+|-- .env
+|   |-- Private environment variables
+|
+|-- .gitignore
+|   |-- Files excluded from Git
+|
+|-- README.md
+    |-- Project documentation
 ```
 
 **Note:** `uploads/`, `chroma_db/`, and `.env` are local runtime resources. They should not be committed to the public repository. The exact folders are created or populated as the application runs.
